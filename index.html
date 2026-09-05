@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Mahasiswa SI - Universitas Islam Syekh Yusuf</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <i id="toast-icon" class="fa-solid fa-circle-info"></i>
+        <span id="toast-msg">Notifikasi</span>
+    </div>
+
+    <!-- Modal Konfirmasi Kehadiran -->
+    <div id="modal-confirm" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3><i class="fa-solid fa-clipboard-check"></i> Konfirmasi Kehadiran</h3>
+            <p class="modal-desc">Pastikan data dan bukti foto Anda telah sesuai sebelum mengirim absensi.</p>
+            <div id="modal-summary" class="summary-list"></div>
+            <div class="modal-actions">
+                <button id="btn-cancel-submit" class="btn btn-secondary">Batal</button>
+                <button id="btn-final-submit" class="btn btn-gold"><i class="fa-solid fa-paper-plane"></i> Konfirmasi Kehadiran</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Login Owner -->
+    <div id="modal-owner-login" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3><i class="fa-solid fa-user-shield"></i> Login Akses Owner</h3>
+            <p class="modal-desc">Sistem demo portal admin/owner presensi UNIS.</p>
+            <div class="form-group">
+                <label for="owner-user">Username</label>
+                <input type="text" id="owner-user" placeholder="Masukkan username">
+            </div>
+            <div class="form-group">
+                <label for="owner-pass">Password</label>
+                <input type="password" id="owner-pass" placeholder="Masukkan password">
+            </div>
+            <div class="modal-actions">
+                <button id="btn-close-owner-modal" class="btn btn-secondary">Batal</button>
+                <button id="btn-login-owner" class="btn btn-primary">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navbar Header -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>SISTEM ABSENSI MAHASISWA</h1>
+                    <span>Program Studi Sistem Informasi — Universitas Islam Syekh Yusuf</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="datetime-badge">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="live-datetime">--:--:-- WIB</span>
+                </div>
+                <button id="btn-owner-auth" class="btn btn-gold-outline btn-small">
+                    <i class="fa-solid fa-lock"></i> Owner Login
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        
+        <!-- Peringatan Keamanan & Privasi -->
+        <div class="alert-info">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+                <strong>Pemberitahuan Akses & Privasi:</strong> Foto dan lokasi digunakan khusus untuk verifikasi kehadiran. Kamera dan lokasi hanya diakses setelah persetujuan Anda. Membutuhkan koneksi terenkripsi (HTTPS) saat di-deploy.
+            </div>
+        </div>
+
+        <!-- Dashboard Statistik -->
+        <section class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Absensi</span>
+                    <h3 id="stat-total">0</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon gold"><i class="fa-solid fa-user-check"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Hadir Hari Ini</span>
+                    <h3 id="stat-today">0</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-calendar-day"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Status Hari Ini</span>
+                    <h3 id="stat-status">Belum Absen</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon dark"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Kelas (Reg / Kar)</span>
+                    <h3 id="stat-kelas-count">0 / 0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW MAHASISWA (FORM & PROFIL) -->
+        <div id="view-student" class="grid-layout">
+            <!-- Form Absensi -->
+            <div class="card-column">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-pen-to-square"></i> Form Presensi Mahasiswa</h2>
+                    </div>
+                    <form id="form-absensi" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="nama">Nama Lengkap</label>
+                            <input type="text" id="nama" placeholder="Contoh: Rahmad Hendra" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nim">NIM (Nomor Induk Mahasiswa)</label>
+                            <input type="number" id="nim" placeholder="Contoh: 210401001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jenis-kelas">Jenis Kelas</label>
+                            <select id="jenis-kelas" required>
+                                <option value="">-- Pilih Jenis Kelas --</option>
+                                <option value="Reguler">Reguler</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                        </div>
+
+                        <!-- Fitur Kamera -->
+                        <div class="form-group">
+                            <label>Bukti Presensi Wajah</label>
+                            <div class="camera-box">
+                                <video id="webcam" autoplay playsinline class="hidden"></video>
+                                <canvas id="canvas" class="hidden"></canvas>
+                                <img id="photo-preview" class="hidden" alt="Preview Foto Absen">
+                                <div id="camera-placeholder" class="camera-placeholder">
+                                    <i class="fa-solid fa-camera-retro fa-2x"></i>
+                                    <span>Kamera Belum Aktif</span>
+                                </div>
+                            </div>
+                            <div class="camera-actions">
+                                <button type="button" id="btn-start-cam" class="btn btn-secondary"><i class="fa-solid fa-video"></i> Aktifkan Kamera</button>
+                                <button type="button" id="btn-capture" class="btn btn-primary hidden"><i class="fa-solid fa-camera"></i> Ambil Foto</button>
+                                <button type="button" id="btn-retake" class="btn btn-outline hidden"><i class="fa-solid fa-rotate-left"></i> Ambil Ulang</button>
+                            </div>
+                        </div>
+
+                        <!-- GPS Real-Time Info -->
+                        <div class="form-group">
+                            <label>Data Lokasi Real-Time</label>
+                            <div class="location-box">
+                                <div id="gps-indicator" class="gps-status badge-error">
+                                    <i class="fa-solid fa-circle-dot"></i> Lokasi Belum Tersedia
+                                </div>
+                                <div class="geo-details">
+                                    <div class="geo-item"><span class="lbl">Latitude:</span> <span id="lat-val">-</span></div>
+                                    <div class="geo-item"><span class="lbl">Longitude:</span> <span id="lng-val">-</span></div>
+                                    <div class="geo-item"><span class="lbl">Akurasi:</span> <span id="accuracy-val">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-submit" class="btn btn-success btn-block" disabled>
+                            <i class="fa-solid fa-check-circle"></i> Submit Absensi
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Profil & Info Akademik -->
+            <div class="card-column">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-id-card"></i> Profil Mahasiswa</h2>
+                    </div>
+                    <div id="profile-content" class="profile-empty">
+                        <i class="fa-solid fa-user-clock fa-3x"></i>
+                        <p>Belum ada data presensi yang tercatat untuk profil Anda hari ini.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-unis-pattern">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-circle-info"></i> Ketentuan Presensi</h2>
+                    </div>
+                    <ul class="info-list">
+                        <li><i class="fa-solid fa-check text-gold"></i> Wajib mengisi Nama, NIM, dan Jenis Kelas secara presisi.</li>
+                        <li><i class="fa-solid fa-check text-gold"></i> Mengambil foto verifikasi secara langsung dari kamera.</li>
+                        <li><i class="fa-solid fa-check text-gold"></i> Mengizinkan browser mengakses Geolocation GPS.</li>
+                        <li><i class="fa-solid fa-check text-gold"></i> Sistem membatasi 1x absensi per NIM untuk hari yang sama.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL OWNER DASHBOARD (Hidden Default) -->
+        <section id="view-owner" class="card hidden border-gold">
+            <div class="card-header flex-between">
+                <h2><i class="fa-solid fa-user-shield text-gold"></i> OWNER DASHBOARD — REKAPITULASI PRESIENSI</h2>
+                <button id="btn-owner-logout" class="btn btn-small btn-secondary"><i class="fa-solid fa-right-from-bracket"></i> Logout Owner</button>
+            </div>
+            
+            <div class="demo-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Catatan Demo:</strong> Autentikasi owner di JS ini hanya untuk tujuan demonstrasi antarmuka 3-file static. Jangan digunakan sebagai keamanan standar produksi.</span>
+            </div>
+
+            <div class="owner-controls flex-between">
+                <div class="search-filters">
+                    <input type="text" id="owner-search" placeholder="Cari Nama atau NIM..." class="input-sm">
+                    <select id="owner-filter-kelas" class="input-sm">
+                        <option value="">Semua Kelas</option>
+                        <option value="Reguler">Reguler</option>
+                        <option value="Karyawan">Karyawan</option>
+                    </select>
+                </div>
+                <button id="btn-delete-all" class="btn btn-small btn-danger"><i class="fa-solid fa-trash"></i> Hapus Semua Data</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Tanggal & Jam</th>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Status</th>
+                            <th>Koordinat GPS</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="owner-tbody">
+                        <!-- Render Javascript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tabel Riwayat Kehadiran (Publik/Siswa) -->
+        <section id="history-section" class="card history-section">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Kehadiran Mahasiswa</h2>
+            </div>
+            
+            <!-- Controls Search & Filter -->
+            <div class="filter-bar">
+                <input type="text" id="filter-search" placeholder="Cari Nama / NIM..." class="input-sm">
+                <select id="filter-kelas" class="input-sm">
+                    <option value="">Semua Jenis Kelas</option>
+                    <option value="Reguler">Reguler</option>
+                    <option value="Karyawan">Karyawan</option>
+                </select>
+                <input type="date" id="filter-date" class="input-sm">
+                <button id="btn-reset-filter" class="btn btn-small btn-outline"><i class="fa-solid fa-arrows-rotate"></i> Reset</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Jenis Kelas</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <tr>
+                            <td colspan="6" class="text-center">Belum ada riwayat absensi.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
