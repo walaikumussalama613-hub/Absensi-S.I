@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Mahasiswa UNIS - Sistem Informasi</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="logo">UNIS</div>
+                <div class="brand-text">
+                    <h2>Universitas Islam Syekh Yusuf</h2>
+                    <p>Sistem Informasi</p>
+                </div>
+            </div>
+            <div class="nav-controls">
+                <button id="themeToggleBtn" class="btn-icon">☀️ Light</button>
+                <button id="ownerLoginNavBtn" class="btn btn-outline">Login Owner</button>
+                <button id="logoutBtn" class="btn btn-danger hidden">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <main id="studentView" class="view-section active">
+            <div class="page-header">
+                <h1>Form Absensi Mahasiswa</h1>
+                <p>Silakan isi data dan ambil foto presensi Anda hari ini.</p>
+            </div>
+
+            <div class="grid-2col">
+                <div class="card">
+                    <h3>Data Mahasiswa</h3>
+                    <form id="attendanceForm">
+                        <div class="form-group">
+                            <label for="studentName">Nama Lengkap</label>
+                            <input type="text" id="studentName" placeholder="Masukkan nama lengkap" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentNIM">NIM</label>
+                            <input type="text" id="studentNIM" placeholder="Masukkan NIM" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="classType">Jenis Kelas</label>
+                            <select id="classType" required>
+                                <option value="">-- Pilih Jenis Kelas --</option>
+                                <option value="Reguler Pagi">Reguler Pagi</option>
+                                <option value="Reguler Malam">Reguler Malam</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Presensi Foto</label>
+                            <div class="camera-box">
+                                <video id="webcam" autoplay playsinline class="hidden"></video>
+                                <canvas id="canvas" class="hidden"></canvas>
+                                <img id="photoPreview" class="hidden" alt="Hasil Foto">
+                                <div id="cameraPlaceholder" class="camera-placeholder">
+                                    <p>Kamera Belum Aktif</p>
+                                </div>
+                            </div>
+                            <div class="camera-actions">
+                                <button type="button" id="startCamBtn" class="btn btn-secondary">Aktifkan Kamera</button>
+                                <button type="button" id="captureBtn" class="btn btn-primary hidden">Ambil Foto</button>
+                                <button type="button" id="retakeBtn" class="btn btn-secondary hidden">Ulang Foto</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitAbsenceBtn" class="btn btn-block btn-success">Kirim Absensi</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Riwayat Presensi Mahasiswa</h3>
+                    <p class="subtitle">Masukkan NIM Anda untuk memuat riwayat presensi pribadi.</p>
+                    <div class="search-box-inline">
+                        <input type="text" id="searchNIMHistory" placeholder="Cari berdasarkan NIM...">
+                        <button id="btnSearchHistory" class="btn btn-primary">Cari</button>
+                    </div>
+
+                    <div class="table-responsive mt-15">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jam</th>
+                                    <th>Nama</th>
+                                    <th>NIM</th>
+                                    <th>Kelas</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentHistoryTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Masukkan NIM untuk menampilkan riwayat.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="ownerDashboard" class="view-section hidden">
+            <div class="page-header">
+                <h1>Dashboard Pengelola Absensi</h1>
+                <p>Selamat datang, <strong id="ownerNameDisplay">Owner</strong></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Hadir</h4>
+                    <p class="stat-value" id="statTotalHadir">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Absensi Hari Ini</h4>
+                    <p class="stat-value" id="statToday">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Reguler Pagi</h4>
+                    <p class="stat-value" id="statPagi">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Reguler Malam</h4>
+                    <p class="stat-value" id="statMalam">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Karyawan</h4>
+                    <p class="stat-value" id="statKaryawan">0</p>
+                </div>
+            </div>
+
+            <div class="card mt-20">
+                <div class="filter-bar">
+                    <input type="text" id="adminSearchKeyword" placeholder="Cari nama atau NIM...">
+                    <select id="adminFilterClass">
+                        <option value="ALL">Semua Kelas</option>
+                        <option value="Reguler Pagi">Reguler Pagi</option>
+                        <option value="Reguler Malam">Reguler Malam</option>
+                        <option value="Karyawan">Karyawan</option>
+                    </select>
+                    <input type="date" id="adminFilterDate">
+                    <button id="btnExportCSV" class="btn btn-success">Export CSV</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Foto</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Jenis Kelas</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminDataTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="closeLoginModal">&times;</span>
+            <h3>Login Account Owner</h3>
+            <form id="ownerLoginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Konfirmasi Presensi</h3>
+            <p>Apakah data absensi yang Anda masukkan sudah benar?</p>
+            <div id="confirmSummary" class="summary-box"></div>
+            <div class="modal-actions">
+                <button id="cancelConfirmBtn" class="btn btn-secondary">Batal</button>
+                <button id="saveConfirmBtn" class="btn btn-success">Konfirmasi Absensi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="closeEditModal">&times;</span>
+            <h3>Edit Data Absensi</h3>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editName">Nama</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNIM">NIM</label>
+                    <input type="text" id="editNIM" required>
+                </div>
+                <div class="form-group">
+                    <label for="editClass">Jenis Kelas</label>
+                    <select id="editClass" required>
+                        <option value="Reguler Pagi">Reguler Pagi</option>
+                        <option value="Reguler Malam">Reguler Malam</option>
+                        <option value="Karyawan">Karyawan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" required>
+                        <option value="Hadir">Hadir</option>
+                        <option value="Izin">Izin</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Alpha">Alpha</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="imageModal" class="modal hidden">
+        <div class="modal-content text-center">
+            <span class="close-modal" id="closeImageModal">&times;</span>
+            <h3>Foto Presensi Mahasiswa</h3>
+            <img id="previewModalImg" src="" alt="Foto Presensi" class="img-modal-large">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
